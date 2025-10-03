@@ -119,4 +119,23 @@ public class ProductsController : ControllerBase
 
     }
 
+    // DELETE /api/products/1
+    [HttpDelete("{id}")]
+
+    public IActionResult Delete(int id)
+    {
+        var product = dbContext.Products.Find(id);
+
+        if (product == null)
+        { 
+            return NotFound(); 
+        }
+
+        dbContext.Products.Remove(product);
+
+        dbContext.SaveChanges();    
+
+        return NoContent();
+            
+    }
 }
