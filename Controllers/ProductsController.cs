@@ -3,6 +3,8 @@ using FreakyFashion.Data;
 using FreakyFashion.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // för DbUpdateException
+using Microsoft.AspNetCore.JsonPatch;
+
 
 namespace FreakyFashion.Controllers;
 
@@ -118,6 +120,60 @@ public class ProductsController : ControllerBase
         );
 
     }
+
+    // PATCH /api/products/{id}
+    // Content-Type: application/json-patch+json
+    // Få klarhet om det ska vara 200 OK eller 204 No Content, uppgiftens intruktioner är otydliga. 
+    [HttpPatch("{id}")]
+    public IActionResult Patch(int id, [FromBody] JsonPatchDocument<ProductPatch> patch)
+    {
+        if (patch is null) return BadRequest("Patch document is required.");
+
+        // 1) Hämta entiteten
+        var entity = dbContext.Products.Find(id);
+        if (entity is null) return NotFound();
+
+        // 2) Mappa entity -> DTO vi kan patcha
+        var dto = new ProductPatch
+        {
+            name = entity.Name,
+            description = entity.Description,
+            price = entity.Price,
+            image = entity.ImageUrl,
+            urlSlug = entity.UrlSlug
+        };
+
+        // 3) Applicera patch mot DTO + fånga valideringsfel i ModelState
+        patch.ApplyTo(dto, ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        // 4) Enkla regler
+        if (dto.price is < 0) return BadRequest("price cannot be negative");
+
+        // 5) Mappa tillbaka DTO -> entity
+        if (dto.name is not null) entity.Name = dto.name;
+        if (dto.description is not null) entity.Description = dto.description;
+        if (dto.price is not null) entity.Price = dto.price.Value;
+        if (dto.image is not null) entity.ImageUrl = dto.image;
+
+        if (dto.urlSlug is not null)
+        {
+            // Klienten har satt slug uttryckligen
+            entity.UrlSlug = dto.urlSlug;
+        }
+        else if (dto.name is not null)
+        {
+            // Namn ändrades men ingen slug skickades -> generera om
+            entity.UrlSlug = Slugify(entity.Name);
+        }
+
+        // 6) Spara
+        dbContext.SaveChanges();
+
+        // 7) Enligt krav: 204 No Content
+        return NoContent();
+    }
+
 
     // DELETE /api/products/1
     [HttpDelete("{id}")]
