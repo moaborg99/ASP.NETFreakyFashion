@@ -109,4 +109,66 @@ public class CategoriesController : ControllerBase
         return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, response);
     }
 
+    // PUT /api/categories/{categoryId}/products/{productId}
+    // => 204 No Content
+    [HttpPut("{categoryId}/products/{productId}")]
+    public IActionResult AddProductToCategory(int categoryId, int productId)
+    {
+        // 1) Hämta kategori + dess produkter
+        var category = db.Categories
+            .Include(c => c.Products)
+            .FirstOrDefault(c => c.Id == categoryId);
+        if (category is null) return NotFound();
+
+        // 2) Hämta produkt
+        var product = db.Products.Find(productId);
+        if (product is null) return NotFound();
+
+        // 3) Lägg till koppling om den inte redan finns (idempotent)
+        if (!category.Products.Any(p => p.Id == productId))
+        {
+            category.Products.Add(product);
+            db.SaveChanges();
+        }
+
+        return NoContent();
+    }
+
+    // DELETE /api/categories/{categoryId}/products/{productId}
+    // => 204 No Content
+    [HttpDelete("{categoryId}/products/{productId}")]
+    public IActionResult RemoveProductFromCategory(int categoryId, int productId)
+    {
+        // 1) Hämta kategori + dess produkter
+        var category = db.Categories
+            .Include(c => c.Products)
+            .FirstOrDefault(c => c.Id == categoryId);
+        if (category is null) return NotFound();
+
+        // 2) Finns kopplingen? Ta bort idempotent
+        var existing = category.Products.FirstOrDefault(p => p.Id == productId);
+        if (existing != null)
+        {
+            category.Products.Remove(existing);
+            db.SaveChanges();
+        }
+
+        return NoContent();
+    }
+
+    // DELETE /api/categories/{id}  => 204 No Content eller 404
+    [HttpDelete("{id}")]
+    public IActionResult DeleteCategory(int id)
+    {
+        var category = db.Categories.Find(id);
+        if (category is null) return NotFound();
+
+        db.Categories.Remove(category);
+        db.SaveChanges(); // ON DELETE CASCADE tar bort länkar i CategoryProducts
+
+        return NoContent();
+    }
+
+
+
 }
