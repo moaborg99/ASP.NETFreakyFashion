@@ -2,6 +2,7 @@
 using FreakyFashion.Contracts.Products;
 using FreakyFashion.Data;
 using FreakyFashion.Domain;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -167,6 +168,45 @@ public class CategoriesController : ControllerBase
         db.SaveChanges(); // ON DELETE CASCADE tar bort länkar i CategoryProducts
 
         return NoContent();
+    }
+
+    // PATCH /api/categories/{id}
+    // Content-Type: application/json-patch+json
+    [HttpPatch("{id}")]
+    public IActionResult PatchCategory(int id, [FromBody] JsonPatchDocument<CategoryPatch> patch)
+    {
+        if (patch is null) return BadRequest("Patch document is required.");
+
+        var entity = db.Categories.Find(id);
+        if (entity is null) return NotFound();
+
+        // DTO att patcha mot
+        var dto = new CategoryPatch
+        {
+            name = entity.Name,
+            image = entity.ImageUrl,
+            urlSlug = entity.UrlSlug
+        };
+
+        patch.ApplyTo(dto, ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        // Mappar tillbaka
+        if (dto.name is not null) entity.Name = dto.name;
+        if (dto.image is not null) entity.ImageUrl = dto.image;
+
+        if (dto.urlSlug is not null)
+        {
+            entity.UrlSlug = dto.urlSlug;
+        }
+        else if (dto.name is not null)
+        {
+            // Om namnet ändrats men slug ej skickats → generera om
+            entity.UrlSlug = Slugify(entity.Name);
+        }
+
+        db.SaveChanges();
+        return NoContent(); // 204 (du har lärar-ok på 204 eller 200)
     }
 
 
