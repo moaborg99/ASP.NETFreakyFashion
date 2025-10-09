@@ -4,6 +4,7 @@ using FreakyFashion.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // för DbUpdateException
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace FreakyFashion.Controllers;
@@ -84,6 +85,7 @@ public class ProductsController : ControllerBase
     }
 
     // POST /api/products
+    [Authorize]
     [HttpPost]
     public ActionResult<ProductResponse> Create([FromBody] CreateProductRequest dto)
     {
@@ -124,6 +126,7 @@ public class ProductsController : ControllerBase
     // PATCH /api/products/{id}
     // Content-Type: application/json-patch+json
     // Få klarhet om det ska vara 200 OK eller 204 No Content, uppgiftens intruktioner är otydliga. 
+    [Authorize]
     [HttpPatch("{id}")]
     public IActionResult Patch(int id, [FromBody] JsonPatchDocument<ProductPatch> patch)
     {
@@ -176,6 +179,7 @@ public class ProductsController : ControllerBase
 
 
     // DELETE /api/products/1
+    [Authorize]
     [HttpDelete("{id}")]
 
     public IActionResult Delete(int id)

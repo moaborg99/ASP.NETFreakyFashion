@@ -5,6 +5,7 @@ using FreakyFashion.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FreakyFashion.Controllers;
 
@@ -80,6 +81,7 @@ public class CategoriesController : ControllerBase
     }
 
     // POST /api/categories
+    [Authorize]
     [HttpPost]
     public ActionResult<CategoryResponse> Create([FromBody] CreateCategoryRequest dto)
     {
@@ -112,6 +114,7 @@ public class CategoriesController : ControllerBase
 
     // PUT /api/categories/{categoryId}/products/{productId}
     // => 204 No Content
+    [Authorize]
     [HttpPut("{categoryId}/products/{productId}")]
     public IActionResult AddProductToCategory(int categoryId, int productId)
     {
@@ -137,6 +140,7 @@ public class CategoriesController : ControllerBase
 
     // DELETE /api/categories/{categoryId}/products/{productId}
     // => 204 No Content
+    [Authorize]
     [HttpDelete("{categoryId}/products/{productId}")]
     public IActionResult RemoveProductFromCategory(int categoryId, int productId)
     {
@@ -158,6 +162,7 @@ public class CategoriesController : ControllerBase
     }
 
     // DELETE /api/categories/{id}  => 204 No Content eller 404
+    [Authorize]
     [HttpDelete("{id}")]
     public IActionResult DeleteCategory(int id)
     {
@@ -172,6 +177,7 @@ public class CategoriesController : ControllerBase
 
     // PATCH /api/categories/{id}
     // Content-Type: application/json-patch+json
+    [Authorize]
     [HttpPatch("{id}")]
     public IActionResult PatchCategory(int id, [FromBody] JsonPatchDocument<CategoryPatch> patch)
     {
