@@ -1,6 +1,6 @@
 ﻿using FreakyFashion.Contracts.Products;
 using FreakyFashion.Data;
-using FreakyFashion.Domain;
+using FreakyFashion.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // för DbUpdateException
 using Microsoft.AspNetCore.JsonPatch;

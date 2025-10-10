@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FreakyFashion.Domain;
+namespace FreakyFashion.Entities;
 
 [Table("Categories")] // matchar dbo.Categories i SQL
 public class Category

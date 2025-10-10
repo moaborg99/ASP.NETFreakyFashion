@@ -1,4 +1,4 @@
-﻿using FreakyFashion.Domain;
+﻿using FreakyFashion.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace FreakyFashion.Data;

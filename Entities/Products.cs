@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore; // för [Precision]
 
-namespace FreakyFashion.Domain;
+namespace FreakyFashion.Entities;
 
 [Table("Products")] // tabellnamnet i SQL
 public class Product
