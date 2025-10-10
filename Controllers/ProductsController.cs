@@ -31,38 +31,34 @@ public class ProductsController : ControllerBase
         return s;
     }
 
-    // GET /api/products
-    // GET /api/products?slug=svart-t-shirt  => returnera LISTA (0 eller 1), alltid 200 OK
+    // GET /api/products[?page=1&pageSize=10][&slug=...]
     [HttpGet]
-    public ActionResult<IEnumerable<ProductResponse>> GetProducts([FromQuery] string? slug)
+    public ActionResult<IEnumerable<ProductResponse>> GetProducts(
+        [FromQuery] string? slug,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         if (!string.IsNullOrWhiteSpace(slug))
         {
-            var filtered = dbContext.Products
+            var bySlug = dbContext.Products
                 .Where(p => p.UrlSlug == slug)
-                .Select(p => new ProductResponse(
-                    p.Id,
-                    p.Name,
-                    p.Description,
-                    p.Price,
-                    p.ImageUrl
-                ))
+                .OrderBy(p => p.Id) // stabil ordning om du vill
+                .Select(p => new ProductResponse(p.Id, p.Name, p.Description, p.Price, p.ImageUrl))
                 .ToList();
 
-            return Ok(filtered); // 200 + [] om ingen träff
+            return Ok(bySlug); // lista med 0 eller 1
         }
 
-        var all = dbContext.Products
-            .Select(p => new ProductResponse(
-                p.Id,
-                p.Name,
-                p.Description,
-                p.Price,
-                p.ImageUrl
-            ))
+        if (page < 1 || pageSize < 1) return BadRequest("page and pageSize must be >= 1");
+
+        var items = dbContext.Products
+            .OrderBy(p => p.Id)                 // stabil sortering FÖRE Skip/Take
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ProductResponse(p.Id, p.Name, p.Description, p.Price, p.ImageUrl))
             .ToList();
 
-        return Ok(all);
+        return Ok(items); // paginerad lista
     }
 
     // GET /api/products/{id}
